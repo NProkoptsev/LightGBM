@@ -323,26 +323,24 @@ def train(
 
         evaluation_result_list: List[_LGBM_BoosterEvalMethodResultType] = []
         # check evaluation result.
-        if valid_sets is not None:
-            if is_valid_contain_train:
-                evaluation_result_list.extend(booster.eval_train(feval))
-            evaluation_result_list.extend(booster.eval_valid(feval))
-        try:
-            for cb in callbacks_after_iter:
-                cb(
-                    callback.CallbackEnv(
-                        model=booster,
-                        params=params,
-                        iteration=i,
-                        begin_iteration=init_iteration,
-                        end_iteration=init_iteration + num_boost_round,
-                        evaluation_result_list=evaluation_result_list,
-                    )
-                )
-        except callback.EarlyStopException as earlyStopException:
-            booster.best_iteration = earlyStopException.best_iteration + 1
-            evaluation_result_list = earlyStopException.best_score
-            break
+        
+        if ( (i % params.get("metric_freq"],1)) == 0) or (params.get("early_stopping_round",0) > 0):
+            if valid_sets is not None:
+                if is_valid_contain_train:
+                    evaluation_result_list.extend(booster.eval_train(feval))
+                evaluation_result_list.extend(booster.eval_valid(feval))
+            try:
+                for cb in callbacks_after_iter:
+                    cb(callback.CallbackEnv(model=booster,
+                                            params=params,
+                                            iteration=i,
+                                            begin_iteration=init_iteration,
+                                            end_iteration=init_iteration + num_boost_round,
+                                            evaluation_result_list=evaluation_result_list))
+            except callback.EarlyStopException as earlyStopException:
+                booster.best_iteration = earlyStopException.best_iteration + 1
+                evaluation_result_list = earlyStopException.best_score
+                break
     booster.best_score = defaultdict(OrderedDict)
     for dataset_name, eval_name, score, _ in evaluation_result_list:
         booster.best_score[dataset_name][eval_name] = score
