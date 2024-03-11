@@ -324,7 +324,7 @@ def train(
         evaluation_result_list: List[_LGBM_BoosterEvalMethodResultType] = []
         # check evaluation result.
         
-        if ( (i % params.get("metric_freq",1)) == 0) or (params.get("early_stopping_round",0) > 0):
+        if ( ( (i+1) % params.get("metric_freq",1)) == 0) or (params.get("early_stopping_round",0) > 0):
             if valid_sets is not None:
                 if is_valid_contain_train:
                     evaluation_result_list.extend(booster.eval_train(feval))
