@@ -323,6 +323,10 @@ inline void Linkers::SendRecv(int send_rank, char* send_data, int send_len,
   MPI_SAFE_CALL(MPI_Wait(&send_request, &status));
 }
 
+inline void Linkers::ReduceSumScatter(double* send_data, double* recv_data, int[] counts) {
+  MPI_SAFE_CALL(MPI_Reduce_scatter(send_data, recv_data, counts, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD));
+}
+
 #endif  // USE_MPI
 }  // namespace LightGBM
 #endif   // LightGBM_NETWORK_LINKERS_H_
