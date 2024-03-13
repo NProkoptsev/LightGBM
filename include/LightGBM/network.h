@@ -1,3 +1,4 @@
+
 /*!
  * Copyright (c) 2016 Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See LICENSE file in the project root for license information.
@@ -162,6 +163,10 @@ class Network {
   * \param reducer Reduce function
   */
   static void ReduceScatter(char* input, comm_size_t input_size, int type_size,
+                            const comm_size_t* block_start, const comm_size_t* block_len, char* output, comm_size_t output_size,
+                            const ReduceFunction& reducer);
+
+  static void ReduceSumScatter(char* input, comm_size_t input_size, int type_size,
                             const comm_size_t* block_start, const comm_size_t* block_len, char* output, comm_size_t output_size,
                             const ReduceFunction& reducer);
 
