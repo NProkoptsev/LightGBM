@@ -81,6 +81,8 @@ class Linkers {
 
   inline void SendRecv(int send_rank, char* send_data, int64_t send_len,
                        int recv_rank, char* recv_data, int64_t recv_len);
+
+  inline void ReduceSumScatter(double* send_data, double* recv_data, int* counts);
   /*!
   * \brief Get rank of local machine
   */
