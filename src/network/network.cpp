@@ -251,6 +251,15 @@ void Network::ReduceScatter(char* input, comm_size_t input_size, int type_size,
   }
 }
 
+void Network::ReduceSumScatter(char* input, comm_size_t input_size, int type_size,
+                            const comm_size_t* block_start, const comm_size_t* block_len, char* output,
+                            comm_size_t output_size, const ReduceFunction& reducer) {
+  if (num_machines_ <= 1) {
+    Log::Fatal("Please initialize the network interface first");
+  }
+  linkers_->ReduceSumScatter((double*) input, (double*) output, block_len);
+}
+
 void Network::ReduceScatterRecursiveHalving(char* input, comm_size_t input_size, int type_size,
                                             const comm_size_t* block_start, const comm_size_t* block_len, char* output,
                                             comm_size_t, const ReduceFunction& reducer) {
