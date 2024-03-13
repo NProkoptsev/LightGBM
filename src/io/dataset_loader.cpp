@@ -1394,7 +1394,7 @@ void DatasetLoader::ExtractFeaturesFromFile(const char* filename, const Parser* 
     double tmp_label = 0.0f;
     std::vector<float> feature_row(dataset->num_features_);
     OMP_INIT_EX();
-    #pragma omp parallel for num_threads(OMP_NUM_THREADS()) schedule(static) private(oneline_features) firstprivate(tmp_label, feature_row)
+    #pragma omp parallel for num_threads(OMP_NUM_THREADS()) schedule(dynamic) private(oneline_features) firstprivate(tmp_label, feature_row)
     for (data_size_t i = 0; i < static_cast<data_size_t>(lines.size()); ++i) {
       OMP_LOOP_EX_BEGIN();
       const int tid = omp_get_thread_num();
