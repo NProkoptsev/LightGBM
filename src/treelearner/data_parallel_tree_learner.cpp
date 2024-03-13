@@ -164,6 +164,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
     int size = sizeof(data);
     std::memcpy(input_buffer_.data(), &data, size);
     // global sumup reduce
+    Log::Info("Global sumup allreduce");
     Network::Allreduce(input_buffer_.data(), size, sizeof(std::tuple<data_size_t, double, double, int64_t>), output_buffer_.data(), [](const char *src, char *dst, int type_size, comm_size_t len) {
       comm_size_t used_size = 0;
       const std::tuple<data_size_t, double, double, int64_t> *p1;
@@ -195,6 +196,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
     int size = sizeof(data);
     std::memcpy(input_buffer_.data(), &data, size);
     // global sumup reduce
+    Log::Info("Global sumup allreduce");
     Network::Allreduce(input_buffer_.data(), size, sizeof(std::tuple<data_size_t, double, double>), output_buffer_.data(), [](const char *src, char *dst, int type_size, comm_size_t len) {
       comm_size_t used_size = 0;
       const std::tuple<data_size_t, double, double> *p1;
@@ -280,6 +282,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::FindBestSplits(const Tree* tree) {
   global_timer.Stop("DataParallelTreeLearner::ReduceHistogram::Copy");
   // Reduce scatter for histogram
   global_timer.Start("DataParallelTreeLearner::ReduceHistogram::ReduceScatter");
+  Log::Info("Histogram reducescatter");
   if (!this->config_->use_quantized_grad) {
     Network::ReduceScatter(input_buffer_.data(), reduce_scatter_size_, sizeof(hist_t), block_start_.data(),
                            block_len_.data(), output_buffer_.data(), static_cast<comm_size_t>(output_buffer_.size()), &HistogramSumReducer);
