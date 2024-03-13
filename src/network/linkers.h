@@ -82,7 +82,7 @@ class Linkers {
   inline void SendRecv(int send_rank, char* send_data, int64_t send_len,
                        int recv_rank, char* recv_data, int64_t recv_len);
 
-  inline void ReduceSumScatter(double* send_data, double* recv_data, int* counts);
+  inline void ReduceSumScatter(double* send_data, double* recv_data, cosnt int* counts);
   /*!
   * \brief Get rank of local machine
   */
@@ -325,7 +325,7 @@ inline void Linkers::SendRecv(int send_rank, char* send_data, int send_len,
   MPI_SAFE_CALL(MPI_Wait(&send_request, &status));
 }
 
-inline void Linkers::ReduceSumScatter(double* send_data, double* recv_data, int* counts) {
+inline void Linkers::ReduceSumScatter(double* send_data, double* recv_data, const int* counts) {
   MPI_SAFE_CALL(MPI_Reduce_scatter(send_data, recv_data, counts, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD));
 }
 
