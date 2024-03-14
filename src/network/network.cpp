@@ -257,6 +257,7 @@ void Network::ReduceSumScatter(char* input, comm_size_t input_size, int type_siz
   if (num_machines_ <= 1) {
     Log::Fatal("Please initialize the network interface first");
   }
+  Log::Info("Using mpi reducescatter");
   linkers_->ReduceSumScatter((double*) input, (double*) output, block_len);
 }
 
