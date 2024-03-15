@@ -290,8 +290,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::FindBestSplits(const Tree* tree) {
   global_timer.Start("DataParallelTreeLearner::ReduceHistogram::ReduceScatter");
   Log::Info("Histogram reducescatter");
   if (!this->config_->use_quantized_grad) {
-    Network::ReduceSumScatter(input_buffer_.data(), reduce_scatter_size_, sizeof(hist_t), block_start_.data(),
-                           block_doublelen_.data(), output_buffer_.data(), static_cast<comm_size_t>(output_buffer_.size()), &HistogramSumReducer);
+    Network::ReduceSumScatter(input_buffer_.data(), output_buffer_.data(), block_doublelen_.data());
   } else {
     const uint8_t smaller_leaf_num_bits = this->gradient_discretizer_->template GetHistBitsInLeaf<true>(this->smaller_leaf_splits_->leaf_index());
     if (smaller_leaf_num_bits <= 16) {
