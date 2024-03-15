@@ -253,14 +253,12 @@ void Network::ReduceScatter(char* input, comm_size_t input_size, int type_size,
   }
 }
 
-void Network::ReduceSumScatter(char* input, comm_size_t input_size, int type_size,
-                            const comm_size_t* block_start, const comm_size_t* block_len, char* output,
-                            comm_size_t output_size, const ReduceFunction& reducer) {
+void Network::ReduceSumScatter(double* input, double* output, const comm_size_t* block_len) {
   if (num_machines_ <= 1) {
     Log::Fatal("Please initialize the network interface first");
   }
   Log::Info("Using mpi reducescatter");
-  linkers_->ReduceSumScatter((double*) input, (double*) output, block_len);
+  linkers_->ReduceSumScatter(input, output, block_len);
 }
 
 void Network::ReduceScatterRecursiveHalving(char* input, comm_size_t input_size, int type_size,
