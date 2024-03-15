@@ -308,7 +308,6 @@ class Network {
   static THREAD_LOCAL std::vector<comm_size_t> block_start_;
   /*! \brief Buffer to store block size */
   static THREAD_LOCAL std::vector<comm_size_t> block_len_;
-  static THREAD_LOCAL std::vector<comm_size_t> block_doublelen_;
   /*! \brief Buffer  */
   static THREAD_LOCAL std::vector<char> buffer_;
   /*! \brief Size of buffer_ */
