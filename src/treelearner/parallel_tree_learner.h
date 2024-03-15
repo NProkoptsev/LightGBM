@@ -97,6 +97,7 @@ class DataParallelTreeLearner: public TREELEARNER_T {
   std::vector<comm_size_t> block_start_;
   /*! \brief Block size for reduce scatter */
   std::vector<comm_size_t> block_len_;
+  std::vector<comm_size_t> block_doublelen_;
   /*! \brief Block start index for reduce scatter with int16 histograms */
   std::vector<comm_size_t> block_start_int16_;
   /*! \brief Block size for reduce scatter with int16 histograms */
