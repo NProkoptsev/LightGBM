@@ -288,7 +288,6 @@ void DataParallelTreeLearner<TREELEARNER_T>::FindBestSplits(const Tree* tree) {
   global_timer.Stop("DataParallelTreeLearner::ReduceHistogram::Copy");
   // Reduce scatter for histogram
   global_timer.Start("DataParallelTreeLearner::ReduceHistogram::ReduceScatter");
-  Log::Info("Histogram reducescatter");
   if (!this->config_->use_quantized_grad) {
     Network::ReduceSumScatter((double*)input_buffer_.data(), (double*)output_buffer_.data(), block_doublelen_.data());
   } else {
