@@ -44,6 +44,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::Init(const Dataset* train_data, boo
 
   block_start_.resize(num_machines_);
   block_len_.resize(num_machines_);
+  block_doublelen_.resize(num_machines_);
 
   if (this->config_->use_quantized_grad) {
     block_start_int16_.resize(num_machines_);
