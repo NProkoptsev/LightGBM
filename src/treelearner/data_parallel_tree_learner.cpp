@@ -72,6 +72,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::PrepareBufferPos(
   const std::vector<std::vector<int>>& feature_distribution,
   std::vector<comm_size_t>* block_start,
   std::vector<comm_size_t>* block_len,
+  std::vector<comm_size_t>* block_doublelen,
   std::vector<comm_size_t>* buffer_write_start_pos,
   std::vector<comm_size_t>* buffer_read_start_pos,
   comm_size_t* reduce_scatter_size,
@@ -93,6 +94,10 @@ void DataParallelTreeLearner<TREELEARNER_T>::PrepareBufferPos(
   (*block_start)[0] = 0;
   for (int i = 1; i < num_machines_; ++i) {
     (*block_start)[i] = (*block_start)[i - 1] + (*block_len)[i - 1];
+  }
+
+  for (int i = 0; i < num_machines_; ++i) {
+    (*block_doublelen)[i] = (*block_len)[i] / (hist_entry_size/2);
   }
 
   // get buffer_write_start_pos
@@ -147,12 +152,12 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
 
   // get block start and block len for reduce scatter
   if (this->config_->use_quantized_grad) {
-    PrepareBufferPos(feature_distribution, &block_start_, &block_len_, &buffer_write_start_pos_,
+    PrepareBufferPos(feature_distribution, &block_start_, &block_len_, &block_doublelen_, &buffer_write_start_pos_,
       &buffer_read_start_pos_, &reduce_scatter_size_, kInt32HistEntrySize);
-    PrepareBufferPos(feature_distribution, &block_start_int16_, &block_len_int16_, &buffer_write_start_pos_int16_,
+    PrepareBufferPos(feature_distribution, &block_start_int16_, &block_len_int16_, &block_doublelen_, &buffer_write_start_pos_int16_,
       &buffer_read_start_pos_int16_, &reduce_scatter_size_int16_, kInt16HistEntrySize);
   } else {
-    PrepareBufferPos(feature_distribution, &block_start_, &block_len_, &buffer_write_start_pos_,
+    PrepareBufferPos(feature_distribution, &block_start_, &block_len_, &block_doublelen_, &buffer_write_start_pos_,
       &buffer_read_start_pos_, &reduce_scatter_size_, kHistEntrySize);
   }
 
