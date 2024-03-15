@@ -134,7 +134,9 @@ void Network::Allgather(char* input, comm_size_t send_size, char* output) {
     block_len_[i] = send_size;
   }
   // start all gather
-  Allgather(input, block_start_.data(), block_len_.data(), output, send_size * num_machines_);
+  Log::Info("Using mpi allgather");
+  Linkers->AllGather(input, output, send_size);
+  //Allgather(input, block_start_.data(), block_len_.data(), output, send_size * num_machines_);
 }
 
 void Network::Allgather(char* input, const comm_size_t* block_start, const comm_size_t* block_len, char* output, comm_size_t all_size) {
