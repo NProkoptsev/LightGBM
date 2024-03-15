@@ -21,7 +21,6 @@ THREAD_LOCAL BruckMap Network::bruck_map_;
 THREAD_LOCAL RecursiveHalvingMap Network::recursive_halving_map_;
 THREAD_LOCAL std::vector<comm_size_t> Network::block_start_;
 THREAD_LOCAL std::vector<comm_size_t>  Network::block_len_;
-THREAD_LOCAL std::vector<comm_size_t>  Network::block_doublelen_;
 THREAD_LOCAL comm_size_t Network::buffer_size_ = 0;
 THREAD_LOCAL std::vector<char> Network::buffer_;
 THREAD_LOCAL ReduceScatterFunction Network::reduce_scatter_ext_fun_ = nullptr;
@@ -37,7 +36,6 @@ void Network::Init(Config config) {
     recursive_halving_map_ = linkers_->recursive_halving_map();
     block_start_ = std::vector<comm_size_t>(num_machines_);
     block_len_ = std::vector<comm_size_t>(num_machines_);
-    block_doublelen_ = std::vector<int>(num_machines_);
     buffer_size_ = 1024 * 1024;
     buffer_.resize(buffer_size_);
     Log::Info("Local rank: %d, total number of machines: %d", rank_, num_machines_);
@@ -51,7 +49,6 @@ void Network::Init(int num_machines, int rank,
     num_machines_ = num_machines;
     block_start_ = std::vector<comm_size_t>(num_machines_);
     block_len_ = std::vector<comm_size_t>(num_machines_);
-    block_doublelen_ = std::vector<int>(num_machines_);
     buffer_size_ = 1024 * 1024;
     buffer_.resize(buffer_size_);
     reduce_scatter_ext_fun_ = reduce_scatter_ext_fun;
