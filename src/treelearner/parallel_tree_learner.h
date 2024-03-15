@@ -75,6 +75,7 @@ class DataParallelTreeLearner: public TREELEARNER_T {
     const std::vector<std::vector<int>>& feature_distribution,
     std::vector<comm_size_t>* block_start,
     std::vector<comm_size_t>* block_len,
+    std::vector<comm_size_t>* block_doublelen,
     std::vector<comm_size_t>* buffer_write_start_pos,
     std::vector<comm_size_t>* buffer_read_start_pos,
     comm_size_t* reduce_scatter_size,
