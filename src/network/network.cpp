@@ -111,7 +111,7 @@ void Network::AllreduceByAllGather(char* input, comm_size_t input_size, int type
   }
 
   Log::Info("Using mpi allgather");
-  Linkers->AllGather(input, buffer_.data(), input_size);
+  linkers_->AllGather(input, buffer_.data(), input_size);
   // Allgather(input, block_start_.data(), block_len_.data(), buffer_.data(), all_size);
   for (int i = 1; i < num_machines_; ++i) {
     reducer(buffer_.data() + block_start_[i], buffer_.data() + block_start_[0], type_size, input_size);
