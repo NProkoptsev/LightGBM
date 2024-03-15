@@ -110,7 +110,6 @@ void Network::AllreduceByAllGather(char* input, comm_size_t input_size, int type
     buffer_.resize(buffer_size_);
   }
 
-  Log::Info("Using mpi allgather");
   linkers_->AllGather(input, buffer_.data(), input_size);
   // Allgather(input, block_start_.data(), block_len_.data(), buffer_.data(), all_size);
   for (int i = 1; i < num_machines_; ++i) {
@@ -257,7 +256,6 @@ void Network::ReduceSumScatter(double* input, double* output, const comm_size_t*
   if (num_machines_ <= 1) {
     Log::Fatal("Please initialize the network interface first");
   }
-  Log::Info("Using mpi reducescatter");
   linkers_->ReduceSumScatter(input, output, block_len);
 }
 
