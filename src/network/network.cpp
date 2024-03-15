@@ -261,7 +261,6 @@ void Network::ReduceSumScatter(char* input, comm_size_t input_size, int type_siz
   }
   Log::Info("Using mpi reducescatter");
   linkers_->ReduceSumScatter((double*) input, (double*) output, block_len.data());
-  std::memcpy(output, input + block_start[rank_], block_len[rank_]);
 }
 
 void Network::ReduceScatterRecursiveHalving(char* input, comm_size_t input_size, int type_size,
