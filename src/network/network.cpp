@@ -263,9 +263,6 @@ void Network::ReduceSumScatter(char* input, comm_size_t input_size, int type_siz
     Log::Fatal("Please initialize the network interface first");
   }
   Log::Info("Using mpi reducescatter");
-  for (int i = 0; i < num_machines_; ++i) {
-    block_doublelen_[i] = block_len_[i]/8;
-  }
   linkers_->ReduceSumScatter((double*) input, (double*) output, block_doublelen_.data());
   std::memcpy(output, input + block_start[rank_], block_len[rank_]);
 }
