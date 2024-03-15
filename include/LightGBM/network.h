@@ -166,9 +166,7 @@ class Network {
                             const comm_size_t* block_start, const comm_size_t* block_len, char* output, comm_size_t output_size,
                             const ReduceFunction& reducer);
 
-  static void ReduceSumScatter(char* input, comm_size_t input_size, int type_size,
-                            const comm_size_t* block_start, const comm_size_t* block_len, char* output, comm_size_t output_size,
-                            const ReduceFunction& reducer);
+  static void ReduceSumScatter(double* input, double* output, const comm_size_t* block_len);
 
   template<class T>
   static T GlobalSyncUpByMin(T local) {
