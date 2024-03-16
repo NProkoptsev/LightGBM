@@ -154,9 +154,9 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
     }
     is_feature_aggregated_[inner_feature_index] = false;
   }
-  for (int i = 0; i < num_machines_; ++i){
-      std::sort(feature_distribution[i].begin(), feature_distribution[i].end());
-  }
+  // for (int i = 0; i < num_machines_; ++i){
+  //     std::sort(feature_distribution[i].begin(), feature_distribution[i].end());
+  // }
   // get local used feature
   for (auto fid : feature_distribution[rank_]) {
     is_feature_aggregated_[fid] = true;
