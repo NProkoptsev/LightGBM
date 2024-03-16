@@ -145,14 +145,11 @@ void Network::Allgather(char* input, const comm_size_t* block_start, const comm_
   const comm_size_t kRingThreshold = 1 * 1024 * 1024;  // 10MB
   const int kRingNodeThreshold = 64;
   if (all_size > kRingThreshold && num_machines_ < kRingNodeThreshold) {
-    Log::Info("Using ring allgather %d", (int)(all_size/1048576));
     // when num_machines is small and data is large
     AllgatherRing(input, block_start, block_len, output, all_size);
   } else if (recursive_halving_map_.is_power_of_2) {
-    Log::Info("Using recursive allgather %d", (int)(all_size/1048576));
     AllgatherRecursiveDoubling(input, block_start, block_len, output, all_size);
   } else {
-    Log::Info("Using bruck allgather %d", (int)(all_size/1048576));
     AllgatherBruck(input, block_start, block_len, output, all_size);
   }
 }
@@ -244,10 +241,8 @@ void Network::ReduceScatter(char* input, comm_size_t input_size, int type_size,
   }
   const comm_size_t kRingThreshold = 1 * 1024 * 1024;  // 10MB
   if (recursive_halving_map_.is_power_of_2 || input_size < kRingThreshold) {
-    Log::Info("Using recursive reducescatter %d", (int)(input_size/1048576));
     ReduceScatterRecursiveHalving(input, input_size, type_size, block_start, block_len, output, output_size, reducer);
   } else {
-    Log::Info("Using ring reducescatter %d", (int)(input_size/1048576));
     ReduceScatterRing(input, input_size, type_size, block_start, block_len, output, output_size, reducer);
   }
 }
