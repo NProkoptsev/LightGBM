@@ -181,7 +181,6 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
     int size = sizeof(data);
     std::memcpy(input_buffer_.data(), &data, size);
     // global sumup reduce
-    Log::Info("Global sumup allreduce");
     Network::Allreduce(input_buffer_.data(), size, sizeof(std::tuple<data_size_t, double, double, int64_t>), output_buffer_.data(), [](const char *src, char *dst, int type_size, comm_size_t len) {
       comm_size_t used_size = 0;
       const std::tuple<data_size_t, double, double, int64_t> *p1;
@@ -213,7 +212,6 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
     int size = sizeof(data);
     std::memcpy(input_buffer_.data(), &data, size);
     // global sumup reduce
-    Log::Info("Global sumup allreduce");
     Network::Allreduce(input_buffer_.data(), size, sizeof(std::tuple<data_size_t, double, double>), output_buffer_.data(), [](const char *src, char *dst, int type_size, comm_size_t len) {
       comm_size_t used_size = 0;
       const std::tuple<data_size_t, double, double> *p1;
