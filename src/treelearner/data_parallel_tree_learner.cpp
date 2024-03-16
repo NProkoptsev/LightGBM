@@ -132,7 +132,15 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
   // generate feature partition for current tree
   std::vector<std::vector<int>> feature_distribution(num_machines_, std::vector<int>());
   std::vector<int> num_bins_distributed(num_machines_, 0);
+  
+  std::vector<int> random_feature_indices(this->train_data_->num_total_features());
   for (int i = 0; i < this->train_data_->num_total_features(); ++i) {
+      random_feature_indices[i] = i;
+  }
+  std::random_shuffle(random_feature_indices.begin(), random_feature_indices.end());
+  
+  for (int j = 0; j < this->train_data_->num_total_features(); ++j) {
+    i = random_feature_indices[j];
     int inner_feature_index = this->train_data_->InnerFeatureIndex(i);
     if (inner_feature_index == -1) { continue; }
     if (this->col_sampler_.is_feature_used_bytree()[inner_feature_index]) {
@@ -145,6 +153,9 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
       num_bins_distributed[cur_min_machine] += num_bin;
     }
     is_feature_aggregated_[inner_feature_index] = false;
+  }
+  for (int i = 0; i < num_machines_; ++i){
+      feature_distribution[i] = std::sort(feature_distribution[i].begin(), feature_distribution[i].end());
   }
   // get local used feature
   for (auto fid : feature_distribution[rank_]) {
