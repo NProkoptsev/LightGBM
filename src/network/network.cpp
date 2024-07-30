@@ -110,7 +110,8 @@ void Network::AllreduceByAllGather(char* input, comm_size_t input_size, int type
     buffer_.resize(buffer_size_);
   }
 
-  Allgather(input, block_start_.data(), block_len_.data(), buffer_.data(), all_size);
+  linkers_->AllGather(input, buffer_.data(), input_size);
+  // Allgather(input, block_start_.data(), block_len_.data(), buffer_.data(), all_size);
   for (int i = 1; i < num_machines_; ++i) {
     reducer(buffer_.data() + block_start_[i], buffer_.data() + block_start_[0], type_size, input_size);
   }
@@ -244,6 +245,13 @@ void Network::ReduceScatter(char* input, comm_size_t input_size, int type_size,
   } else {
     ReduceScatterRing(input, input_size, type_size, block_start, block_len, output, output_size, reducer);
   }
+}
+
+void Network::ReduceSumScatter(double* input, double* output, const comm_size_t* block_len) {
+  if (num_machines_ <= 1) {
+    Log::Fatal("Please initialize the network interface first");
+  }
+  linkers_->ReduceSumScatter(input, output, block_len);
 }
 
 void Network::ReduceScatterRecursiveHalving(char* input, comm_size_t input_size, int type_size,
