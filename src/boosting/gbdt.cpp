@@ -528,7 +528,13 @@ std::vector<double> GBDT::EvalOneMetric(const Metric* metric, const double* scor
   const bool evaluation_on_cuda = metric->IsCUDAMetric();
   if ((boosting_on_gpu_ && evaluation_on_cuda) || (!boosting_on_gpu_ && !evaluation_on_cuda)) {
   #endif  // USE_CUDA
-    return metric->Eval(score, objective_function_);
+    auto scores = metric->Eval(score, objective_function_);
+    if (Network::num_machines() > 1) {
+      for (int i = 0; i < scores.size(); ++i) {
+        scores[i] = Network::GlobalSyncUpByMean(scores[i]);
+      }
+    }
+    return scores;
   #ifdef USE_CUDA
   } else if (boosting_on_gpu_ && !evaluation_on_cuda) {
     const size_t total_size = static_cast<size_t>(num_data) * static_cast<size_t>(num_tree_per_iteration_);

@@ -81,6 +81,9 @@ class Linkers {
 
   inline void SendRecv(int send_rank, char* send_data, int64_t send_len,
                        int recv_rank, char* recv_data, int64_t recv_len);
+
+  inline void ReduceSumScatter(double* send_data, double* recv_data, const int* counts);
+  inline void AllGather(char* send_data, char* recv_data, int count);
   /*!
   * \brief Get rank of local machine
   */
@@ -322,6 +325,16 @@ inline void Linkers::SendRecv(int send_rank, char* send_data, int send_len,
   // wait for send complete
   MPI_SAFE_CALL(MPI_Wait(&send_request, &status));
 }
+
+inline void Linkers::ReduceSumScatter(double* send_data, double* recv_data, const int* counts) {
+  MPI_SAFE_CALL(MPI_Reduce_scatter(send_data, recv_data, counts, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD));
+}
+
+inline void Linkers::AllGather(char* send_data, char* recv_data, int count) {
+  MPI_SAFE_CALL(MPI_Allgather(send_data, count, MPI_CHAR, recv_data, count, MPI_CHAR, MPI_COMM_WORLD));
+}
+
+
 
 #endif  // USE_MPI
 }  // namespace LightGBM
