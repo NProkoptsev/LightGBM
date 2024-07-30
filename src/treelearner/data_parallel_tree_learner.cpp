@@ -44,6 +44,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::Init(const Dataset* train_data, boo
 
   block_start_.resize(num_machines_);
   block_len_.resize(num_machines_);
+  block_doublelen_.resize(num_machines_);
 
   if (this->config_->use_quantized_grad) {
     block_start_int16_.resize(num_machines_);
@@ -72,6 +73,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::PrepareBufferPos(
   const std::vector<std::vector<int>>& feature_distribution,
   std::vector<comm_size_t>* block_start,
   std::vector<comm_size_t>* block_len,
+  std::vector<comm_size_t>* block_doublelen,
   std::vector<comm_size_t>* buffer_write_start_pos,
   std::vector<comm_size_t>* buffer_read_start_pos,
   comm_size_t* reduce_scatter_size,
@@ -93,6 +95,10 @@ void DataParallelTreeLearner<TREELEARNER_T>::PrepareBufferPos(
   (*block_start)[0] = 0;
   for (int i = 1; i < num_machines_; ++i) {
     (*block_start)[i] = (*block_start)[i - 1] + (*block_len)[i - 1];
+  }
+
+  for (int i = 0; i < num_machines_; ++i) {
+    (*block_doublelen)[i] = (*block_len)[i] / (hist_entry_size/2);
   }
 
   // get buffer_write_start_pos
@@ -126,7 +132,15 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
   // generate feature partition for current tree
   std::vector<std::vector<int>> feature_distribution(num_machines_, std::vector<int>());
   std::vector<int> num_bins_distributed(num_machines_, 0);
+  
+  std::vector<int> random_feature_indices(this->train_data_->num_total_features());
   for (int i = 0; i < this->train_data_->num_total_features(); ++i) {
+      random_feature_indices[i] = i;
+  }
+  std::random_shuffle(random_feature_indices.begin(), random_feature_indices.end());
+  
+  for (int j = 0; j < this->train_data_->num_total_features(); ++j) {
+    int i = random_feature_indices[j];
     int inner_feature_index = this->train_data_->InnerFeatureIndex(i);
     if (inner_feature_index == -1) { continue; }
     if (this->col_sampler_.is_feature_used_bytree()[inner_feature_index]) {
@@ -140,6 +154,9 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
     }
     is_feature_aggregated_[inner_feature_index] = false;
   }
+  // for (int i = 0; i < num_machines_; ++i){
+  //     std::sort(feature_distribution[i].begin(), feature_distribution[i].end());
+  // }
   // get local used feature
   for (auto fid : feature_distribution[rank_]) {
     is_feature_aggregated_[fid] = true;
@@ -147,12 +164,12 @@ void DataParallelTreeLearner<TREELEARNER_T>::BeforeTrain() {
 
   // get block start and block len for reduce scatter
   if (this->config_->use_quantized_grad) {
-    PrepareBufferPos(feature_distribution, &block_start_, &block_len_, &buffer_write_start_pos_,
+    PrepareBufferPos(feature_distribution, &block_start_, &block_len_, &block_doublelen_, &buffer_write_start_pos_,
       &buffer_read_start_pos_, &reduce_scatter_size_, kInt32HistEntrySize);
-    PrepareBufferPos(feature_distribution, &block_start_int16_, &block_len_int16_, &buffer_write_start_pos_int16_,
+    PrepareBufferPos(feature_distribution, &block_start_int16_, &block_len_int16_, &block_doublelen_, &buffer_write_start_pos_int16_,
       &buffer_read_start_pos_int16_, &reduce_scatter_size_int16_, kInt16HistEntrySize);
   } else {
-    PrepareBufferPos(feature_distribution, &block_start_, &block_len_, &buffer_write_start_pos_,
+    PrepareBufferPos(feature_distribution, &block_start_, &block_len_, &block_doublelen_, &buffer_write_start_pos_,
       &buffer_read_start_pos_, &reduce_scatter_size_, kHistEntrySize);
   }
 
@@ -281,8 +298,7 @@ void DataParallelTreeLearner<TREELEARNER_T>::FindBestSplits(const Tree* tree) {
   // Reduce scatter for histogram
   global_timer.Start("DataParallelTreeLearner::ReduceHistogram::ReduceScatter");
   if (!this->config_->use_quantized_grad) {
-    Network::ReduceScatter(input_buffer_.data(), reduce_scatter_size_, sizeof(hist_t), block_start_.data(),
-                           block_len_.data(), output_buffer_.data(), static_cast<comm_size_t>(output_buffer_.size()), &HistogramSumReducer);
+    Network::ReduceSumScatter((double*)input_buffer_.data(), (double*)output_buffer_.data(), block_doublelen_.data());
   } else {
     const uint8_t smaller_leaf_num_bits = this->gradient_discretizer_->template GetHistBitsInLeaf<true>(this->smaller_leaf_splits_->leaf_index());
     if (smaller_leaf_num_bits <= 16) {
