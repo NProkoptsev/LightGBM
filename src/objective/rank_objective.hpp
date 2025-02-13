@@ -43,9 +43,8 @@ class RankingObjective : public ObjectiveFunction {
     // get positions
     positions_ = metadata.positions();
     // get position ids
-    position_ids_ = metadata.position_ids();
     // get number of different position ids
-    num_position_ids_ = static_cast<data_size_t>(metadata.num_position_ids());
+    num_positions_ = static_cast<data_size_t>(metadata.num_positions());
     // get boundaries
     query_boundaries_ = metadata.query_boundaries();
     if (query_boundaries_ == nullptr) {
@@ -53,7 +52,7 @@ class RankingObjective : public ObjectiveFunction {
     }
     num_queries_ = metadata.num_queries();
     // initialize position bias vectors
-    pos_biases_.resize(num_position_ids_, 0.0);
+    pos_biases_.resize(num_positions_, 0.0);
   }
 
   void GetGradients(const double* score, const data_size_t num_sampled_queries, const data_size_t* sampled_query_indices,
@@ -65,12 +64,12 @@ class RankingObjective : public ObjectiveFunction {
       const data_size_t start = query_boundaries_[query_index];
       const data_size_t cnt = query_boundaries_[query_index + 1] - query_boundaries_[query_index];
       std::vector<double> score_adjusted;
-      if (num_position_ids_ > 0) {
+      if (num_positions_ > 0) {
         for (data_size_t j = 0; j < cnt; ++j) {
           score_adjusted.push_back(score[start + j] + pos_biases_[positions_[start + j]]);
         }
       }
-      GetGradientsForOneQuery(query_index, cnt, label_ + start, num_position_ids_ > 0 ? score_adjusted.data() : score + start,
+      GetGradientsForOneQuery(query_index, cnt, label_ + start, num_positions_ > 0 ? score_adjusted.data() : score + start,
                               gradients + start, hessians + start);
       if (weights_ != nullptr) {
         for (data_size_t j = 0; j < cnt; ++j) {
@@ -81,7 +80,7 @@ class RankingObjective : public ObjectiveFunction {
         }
       }
     }
-    if (num_position_ids_ > 0) {
+    if (num_positions_ > 0) {
       UpdatePositionBiasFactors(gradients, hessians);
     }
   }
@@ -118,10 +117,8 @@ class RankingObjective : public ObjectiveFunction {
   const label_t* weights_;
   /*! \brief Pointer of positions */
   const data_size_t* positions_;
-  /*! \brief Pointer of position IDs */
-  const std::string* position_ids_;
   /*! \brief Pointer of label */
-  data_size_t num_position_ids_;
+  data_size_t num_positions_;
   /*! \brief Query boundaries */
   const data_size_t* query_boundaries_;
   /*! \brief Position bias factors */
@@ -297,14 +294,14 @@ class LambdarankNDCG : public RankingObjective {
     /// get number of threads
     int num_threads = OMP_NUM_THREADS();
     // create per-thread buffers for first and second derivatives of utility w.r.t. position bias factors
-    std::vector<double> bias_first_derivatives(num_position_ids_ * num_threads, 0.0);
-    std::vector<double> bias_second_derivatives(num_position_ids_ * num_threads, 0.0);
-    std::vector<int> instance_counts(num_position_ids_ * num_threads, 0);
+    std::vector<double> bias_first_derivatives(num_positions_ * num_threads, 0.0);
+    std::vector<double> bias_second_derivatives(num_positions_ * num_threads, 0.0);
+    std::vector<int> instance_counts(num_positions_ * num_threads, 0);
     #pragma omp parallel for schedule(guided) num_threads(num_threads)
     for (data_size_t i = 0; i < num_data_; i++) {
       // get thread ID
       const int tid = omp_get_thread_num();
-      size_t offset = static_cast<size_t>(positions_[i] + tid * num_position_ids_);
+      size_t offset = static_cast<size_t>(positions_[i] + tid * num_positions_);
       // accumulate first derivatives of utility w.r.t. position bias factors, for each position
       bias_first_derivatives[offset] -= lambdas[i];
       // accumulate second derivatives of utility w.r.t. position bias factors, for each position
@@ -312,13 +309,13 @@ class LambdarankNDCG : public RankingObjective {
       instance_counts[offset]++;
     }
     #pragma omp parallel for schedule(guided) num_threads(num_threads)
-    for (data_size_t i = 0; i < num_position_ids_; i++) {
+    for (data_size_t i = 0; i < num_positions_; i++) {
       double bias_first_derivative = 0.0;
       double bias_second_derivative = 0.0;
       int instance_count = 0;
       // aggregate derivatives from per-thread buffers
       for (int tid = 0; tid < num_threads; tid++) {
-        size_t offset = static_cast<size_t>(i + tid * num_position_ids_);
+        size_t offset = static_cast<size_t>(i + tid * num_positions_);
         bias_first_derivative += bias_first_derivatives[offset];
         bias_second_derivative += bias_second_derivatives[offset];
         instance_count += instance_counts[offset];
@@ -342,8 +339,8 @@ class LambdarankNDCG : public RankingObjective {
       << std::endl;
     Log::Debug(message_stream.str().c_str());
     message_stream.str("");
-    for (int i = 0; i < num_position_ids_; ++i) {
-      message_stream << std::setw(15) << position_ids_[i]
+    for (int i = 0; i < num_positions_; ++i) {
+      message_stream << std::setw(15) << positions_[i]
         << std::setw(15) << pos_biases_[i];
       Log::Debug(message_stream.str().c_str());
       message_stream.str("");

@@ -247,23 +247,11 @@ class Metadata {
   }
 
   /*!
-  * \brief Get position IDs, if does not exist then return nullptr
-  * \return Pointer of position IDs
-  */
-  inline const std::string* position_ids() const {
-    if (!position_ids_.empty()) {
-      return position_ids_.data();
-    } else {
-      return nullptr;
-    }
-  }
-
-  /*!
   * \brief Get Number of different position IDs
   * \return number of different position IDs
   */
-  inline size_t num_position_ids() const {
-      return position_ids_.size();
+  inline data_size_t num_positions() const {
+      return num_positions_;
   }
 
   /*!
