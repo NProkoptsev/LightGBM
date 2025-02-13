@@ -290,26 +290,6 @@ elif [[ $TASK == "mpi" ]]; then
     elif [[ $METHOD == "source" ]]; then
         cmake -B build -S . -DUSE_MPI=ON -DUSE_DEBUG=ON
     fi
-elif [[ $TASK == "int64" ]]; then
-    if [[ $METHOD == "pip" ]]; then
-        sh ./build-python.sh sdist || exit 1
-        sh ./.ci/check-python-dists.sh ./dist || exit 1
-        pip install \
-            -v \
-            --config-settings=cmake.define.USE_DATASET_INT64=ON \
-            "./dist/lightgbm-${LGB_VER}.tar.gz" \
-        || exit 1
-        pytest ./tests/python_package_test || exit 1
-        exit 0
-    elif [[ $METHOD == "wheel" ]]; then
-        sh ./build-python.sh bdist_wheel --use-int64 || exit 1
-        sh ./.ci/check-python-dists.sh ./dist || exit 1
-        pip install "$(echo "./dist/lightgbm-${LGB_VER}"*.whl)" -v || exit 1
-        pytest ./tests || exit 1
-        exit 0
-    elif [[ $METHOD == "source" ]]; then
-        cmake -DUSE_DATASET_INT64=ON ..
-    fi
 else
     cmake -B build -S .
 fi
