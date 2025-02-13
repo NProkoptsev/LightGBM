@@ -367,6 +367,8 @@ class Metadata {
   void SetInitScoresFromIterator(It first, It last);
   /*! \brief Insert queries at the given index */
   void InsertQueries(const data_size_t* queries, data_size_t start_index, data_size_t len);
+  /*! \brief Insert positions at the given index */
+  void InsertPositions(const data_size_t* positions, data_size_t start_index, data_size_t len);
   /*! \brief Set queries from pointers to the first element and the end of an iterator. */
   template <typename It>
   void SetQueriesFromIterator(It first, It last);
