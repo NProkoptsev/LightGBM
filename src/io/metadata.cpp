@@ -20,7 +20,6 @@ Metadata::Metadata() {
   weight_load_from_file_ = false;
   position_load_from_file_ = false;
   query_load_from_file_ = false;
-  positions_load_from_file_ = false;
   init_score_load_from_file_ = false;
   #ifdef USE_CUDA
   cuda_metadata_ = nullptr;
@@ -68,7 +67,7 @@ void Metadata::Init(data_size_t num_data, int weight_idx, int query_idx, int pos
     }
     positions_ = std::vector<data_size_t>(num_data_, 0);
     num_positions_ = num_data_;
-    positions_load_from_file_ = false;
+    position_load_from_file_ = false;
   }
 }
 
@@ -111,7 +110,7 @@ void Metadata::Init(data_size_t num_data, int32_t has_weights, int32_t has_init_
       Log::Fatal("Calling Init() on Metadata positions that have already been initialized");
     }
     positions_.resize(num_data_, 0);
-    positions_load_from_file_ = false;
+    position_load_from_file_ = false;
   }
 }
 
