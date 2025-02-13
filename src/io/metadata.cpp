@@ -75,7 +75,7 @@ void Metadata::InitByReference(data_size_t num_data, const Metadata* reference) 
   int has_weights = reference->num_weights_ > 0;
   int has_init_scores = reference->num_init_score_ > 0;
   int has_queries = reference->num_queries_ > 0;
-  int has_positions = reference->has_positions > 0;
+  int has_positions = reference->num_positions_ > 0;
   int nclasses = reference->num_init_score_classes();
   Init(num_data, has_weights, has_init_scores, has_queries, has_positions, nclasses);
 }
@@ -870,9 +870,9 @@ void Metadata::LoadFromMemory(const void* memory) {
   }
   if (num_positions_ > 0) {
     if (!positions_.empty()) { positions_.clear(); }
-    positions_ = std::vector<label_t>(num_positions_);
-    std::memcpy(positions_.data(), mem_ptr, sizeof(label_t) * num_positions_);
-    mem_ptr += VirtualFileWriter::AlignedSize(sizeof(label_t) * num_positions_);
+    positions_ = std::vector<data_size_t>(num_positions_);
+    std::memcpy(positions_.data(), mem_ptr, sizeof(data_size_t) * num_positions_);
+    mem_ptr += VirtualFileWriter::AlignedSize(sizeof(data_size_t) * num_positions_);
     position_load_from_file_ = true;
   }
   CalculateQueryWeights();
