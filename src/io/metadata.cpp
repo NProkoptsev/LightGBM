@@ -20,6 +20,7 @@ Metadata::Metadata() {
   weight_load_from_file_ = false;
   position_load_from_file_ = false;
   query_load_from_file_ = false;
+  positions_load_from_file_ = false;
   init_score_load_from_file_ = false;
   #ifdef USE_CUDA
   cuda_metadata_ = nullptr;
@@ -39,7 +40,7 @@ void Metadata::Init(const char* data_filename) {
 Metadata::~Metadata() {
 }
 
-void Metadata::Init(data_size_t num_data, int weight_idx, int query_idx) {
+void Metadata::Init(data_size_t num_data, int weight_idx, int query_idx, int position_idx) {
   num_data_ = num_data;
   label_ = std::vector<label_t>(num_data_);
   if (weight_idx >= 0) {
@@ -60,17 +61,27 @@ void Metadata::Init(data_size_t num_data, int weight_idx, int query_idx) {
     queries_ = std::vector<data_size_t>(num_data_, 0);
     query_load_from_file_ = false;
   }
+  if (position_idx >= 0) {
+    if (!positions_.empty()) {
+      Log::Info("Using position id in data file, ignoring the additional position file");
+      positions_.clear();
+    }
+    positions_ = std::vector<data_size_t>(num_data_, 0);
+    num_positions_ = num_data_;
+    positions_load_from_file_ = false;
+  }
 }
 
 void Metadata::InitByReference(data_size_t num_data, const Metadata* reference) {
   int has_weights = reference->num_weights_ > 0;
   int has_init_scores = reference->num_init_score_ > 0;
   int has_queries = reference->num_queries_ > 0;
+  int has_positions = reference->has_positions > 0;
   int nclasses = reference->num_init_score_classes();
-  Init(num_data, has_weights, has_init_scores, has_queries, nclasses);
+  Init(num_data, has_weights, has_init_scores, has_queries, has_positions, nclasses);
 }
 
-void Metadata::Init(data_size_t num_data, int32_t has_weights, int32_t has_init_scores, int32_t has_queries, int32_t nclasses) {
+void Metadata::Init(data_size_t num_data, int32_t has_weights, int32_t has_init_scores, int32_t has_queries, int32_t has_positions, int32_t nclasses) {
   num_data_ = num_data;
   label_ = std::vector<label_t>(num_data_);
   if (has_weights) {
@@ -94,6 +105,13 @@ void Metadata::Init(data_size_t num_data, int32_t has_weights, int32_t has_init_
     }
     queries_.resize(num_data_, 0);
     query_load_from_file_ = false;
+  }
+  if (has_positions) {
+    if (!positions_.empty()) {
+      Log::Fatal("Calling Init() on Metadata positions that have already been initialized");
+    }
+    positions_.resize(num_data_, 0);
+    positions_load_from_file_ = false;
   }
 }
 
@@ -163,6 +181,17 @@ void Metadata::Init(const Metadata& fullset, const data_size_t* used_indices, da
     }
   } else {
     num_queries_ = 0;
+  }
+
+  if (!fullset.positions_.empty()) {
+    positions_ = std::vector<data_size_t>(num_used_indices);
+    num_positions_ = num_used_indices;
+#pragma omp parallel for num_threads(OMP_NUM_THREADS()) schedule(static, 512) if (num_used_indices >= 1024)
+    for (data_size_t i = 0; i < num_used_indices; ++i) {
+      positions_[i] = fullset.positions_[used_indices[i]];
+    }
+  } else {
+    num_positions_ = 0;
   }
 }
 
@@ -625,6 +654,23 @@ void Metadata::InsertQueries(const data_size_t* queries, data_size_t start_index
   // CUDA is handled after all insertions are complete
 }
 
+void Metadata::InsertPositions(const data_size_t* positions, data_size_t start_index, data_size_t len) {
+  if (!positions) {
+    Log::Fatal("Passed null positions");
+  }
+  if (positions_.size() <= 0) {
+    Log::Fatal("Inserting position data into dataset with no queries");
+  }
+  if (static_cast<size_t>(start_index + len) > positions_.size()) {
+    Log::Fatal("Inserted position data is too large for dataset");
+  }
+
+  memcpy(positions_.data() + start_index, positions, sizeof(data_size_t) * len);
+
+  position_load_from_file_ = false;
+  // CUDA is handled after all insertions are complete
+}
+
 void Metadata::LoadWeights() {
   num_weights_ = 0;
   std::string weight_filename(data_filename_);
@@ -760,7 +806,8 @@ void Metadata::InsertAt(data_size_t start_index,
   const float* labels,
   const float* weights,
   const double* init_scores,
-  const int32_t* queries) {
+  const int32_t* queries,
+  const int32_t* positions) {
   if (num_data_ < count + start_index) {
     Log::Fatal("Length of metadata is too long to append #data");
   }
@@ -773,6 +820,9 @@ void Metadata::InsertAt(data_size_t start_index,
   }
   if (queries) {
     InsertQueries(queries, start_index, count);
+  }
+  if (positions) {
+    InsertPositions(positions, start_index, count);
   }
 }
 
@@ -796,6 +846,8 @@ void Metadata::LoadFromMemory(const void* memory) {
   mem_ptr += VirtualFileWriter::AlignedSize(sizeof(num_weights_));
   num_queries_ = *(reinterpret_cast<const data_size_t*>(mem_ptr));
   mem_ptr += VirtualFileWriter::AlignedSize(sizeof(num_queries_));
+  num_positions_ = *(reinterpret_cast<const data_size_t*>(mem_ptr));
+  mem_ptr += VirtualFileWriter::AlignedSize(sizeof(num_positions_));
 
   if (!label_.empty()) { label_.clear(); }
   label_ = std::vector<label_t>(num_data_);
@@ -817,6 +869,13 @@ void Metadata::LoadFromMemory(const void* memory) {
                                               (num_queries_ + 1));
     query_load_from_file_ = true;
   }
+  if (num_positions_ > 0) {
+    if (!positions_.empty()) { positions_.clear(); }
+    positions_ = std::vector<label_t>(num_positions_);
+    std::memcpy(positions_.data(), mem_ptr, sizeof(label_t) * num_positions_);
+    mem_ptr += VirtualFileWriter::AlignedSize(sizeof(label_t) * num_positions_);
+    position_load_from_file_ = true;
+  }
   CalculateQueryWeights();
 }
 
@@ -824,6 +883,7 @@ void Metadata::SaveBinaryToFile(BinaryWriter* writer) const {
   writer->AlignedWrite(&num_data_, sizeof(num_data_));
   writer->AlignedWrite(&num_weights_, sizeof(num_weights_));
   writer->AlignedWrite(&num_queries_, sizeof(num_queries_));
+  writer->AlignedWrite(&num_positions_, sizeof(num_positions_));
   writer->AlignedWrite(label_.data(), sizeof(label_t) * num_data_);
   if (!weights_.empty()) {
     writer->AlignedWrite(weights_.data(), sizeof(label_t) * num_weights_);
@@ -831,6 +891,9 @@ void Metadata::SaveBinaryToFile(BinaryWriter* writer) const {
   if (!query_boundaries_.empty()) {
     writer->AlignedWrite(query_boundaries_.data(),
                          sizeof(data_size_t) * (num_queries_ + 1));
+  }
+  if (!positions_.empty()) {
+    writer->AlignedWrite(positions_.data(), sizeof(data_size_t) * num_positions_);
   }
   if (num_init_score_ > 0) {
     Log::Warning("Please note that `init_score` is not saved in binary file.\n"
@@ -841,7 +904,8 @@ void Metadata::SaveBinaryToFile(BinaryWriter* writer) const {
 size_t Metadata::SizesInByte() const {
   size_t size = VirtualFileWriter::AlignedSize(sizeof(num_data_)) +
                 VirtualFileWriter::AlignedSize(sizeof(num_weights_)) +
-                VirtualFileWriter::AlignedSize(sizeof(num_queries_));
+                VirtualFileWriter::AlignedSize(sizeof(num_queries_)) +
+                VirtualFileWriter::AlignedSize(sizeof(num_positions_));
   size += VirtualFileWriter::AlignedSize(sizeof(label_t) * num_data_);
   if (!weights_.empty()) {
     size += VirtualFileWriter::AlignedSize(sizeof(label_t) * num_weights_);
@@ -849,6 +913,9 @@ size_t Metadata::SizesInByte() const {
   if (!query_boundaries_.empty()) {
     size += VirtualFileWriter::AlignedSize(sizeof(data_size_t) *
                                            (num_queries_ + 1));
+  }
+  if (!positions_.empty()) {
+    size += VirtualFileWriter::AlignedSize(sizeof(data_size_t) * num_positions_);
   }
   return size;
 }

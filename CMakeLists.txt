@@ -22,6 +22,7 @@ option(INSTALL_HEADERS "Install headers to CMAKE_INSTALL_PREFIX (e.g. '/usr/loca
 option(__BUILD_FOR_PYTHON "Set to ON if building lib_lightgbm for use with the Python-package" OFF)
 option(__BUILD_FOR_R "Set to ON if building lib_lightgbm for use with the R-package" OFF)
 option(__INTEGRATE_OPENCL "Set to ON if building LightGBM with the OpenCL ICD Loader and its dependencies included" OFF)
+option(USE_DATASET_INT64 "Enable int64 for dataset rows, when dataset rows more then MAX(int32_t)" OFF)
 
 cmake_minimum_required(VERSION 3.28)
 

@@ -323,6 +323,11 @@ class Booster {
       Log::Fatal(
           "Cannot change group_column after constructed Dataset handle.");
     }
+    if (new_param.count("position_column") &&
+        new_config.position_column != old_config.position_column) {
+      Log::Fatal(
+          "Cannot change position_column after constructed Dataset handle.");
+    }
     if (new_param.count("ignore_column") &&
         new_config.ignore_column != old_config.ignore_column) {
       Log::Fatal(
