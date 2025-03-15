@@ -255,7 +255,7 @@ void GBDT::Train(int snapshot_freq, const std::string& model_output_path) {
   }
 }
 
-void GBDT::RefitTree(const int* tree_leaf_prediction, const size_t nrow, const size_t ncol) {
+void GBDT::RefitTree(const int* tree_leaf_prediction, const data_size_t nrow, const size_t ncol) {
   CHECK_GT(nrow * ncol, 0);
   CHECK_EQ(static_cast<size_t>(num_data_), nrow);
   CHECK_EQ(models_.size(), ncol);
@@ -265,7 +265,7 @@ void GBDT::RefitTree(const int* tree_leaf_prediction, const size_t nrow, const s
   if (linear_tree_) {
     std::vector<int> max_leaves_by_thread = std::vector<int>(OMP_NUM_THREADS(), 0);
     #pragma omp parallel for num_threads(OMP_NUM_THREADS()) schedule(static)
-    for (int i = 0; i < static_cast<int>(nrow); ++i) {
+    for (data_size_t i = 0; i < static_cast<int>(nrow); ++i) {
       int tid = omp_get_thread_num();
       for (size_t j = 0; j < ncol; ++j) {
         max_leaves_by_thread[tid] = std::max(max_leaves_by_thread[tid], tree_leaf_prediction[i * ncol + j]);
@@ -281,7 +281,7 @@ void GBDT::RefitTree(const int* tree_leaf_prediction, const size_t nrow, const s
     for (int tree_id = 0; tree_id < num_tree_per_iteration_; ++tree_id) {
       int model_index = iter * num_tree_per_iteration_ + tree_id;
       #pragma omp parallel for num_threads(OMP_NUM_THREADS()) schedule(static)
-      for (int i = 0; i < num_data_; ++i) {
+      for (data_size_t i = 0; i < num_data_; ++i) {
         leaf_pred[i] = tree_leaf_prediction[i * ncol + model_index];
         CHECK_LT(leaf_pred[i], models_[model_index]->num_leaves());
       }
@@ -392,7 +392,7 @@ bool GBDT::TrainOneIter(const score_t* gradients, const score_t* hessians) {
       auto hess = hessians + offset;
       // need to copy gradients for bagging subset.
       if (is_use_subset && bag_data_cnt < num_data_ && !boosting_on_gpu_) {
-        for (int i = 0; i < bag_data_cnt; ++i) {
+        for (data_size_t i = 0; i < bag_data_cnt; ++i) {
           gradients_pointer_[offset + i] = grad[bag_data_indices[i]];
           hessians_pointer_[offset + i] = hess[bag_data_indices[i]];
         }

@@ -170,6 +170,9 @@ while [ $# -gt 0 ]; do
     --time-costs)
         BUILD_ARGS="${BUILD_ARGS} --config-setting=cmake.define.USE_TIMETAG=ON"
         ;;
+    --use-int64)
+        BUILD_ARGS="${BUILD_ARGS} --config-setting=cmake.define.USE_DATASET_INT64=ON"
+        ;;
     --user)
         PIP_INSTALL_ARGS="${PIP_INSTALL_ARGS} --user"
         ;;
