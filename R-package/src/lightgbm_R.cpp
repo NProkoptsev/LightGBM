@@ -349,7 +349,7 @@ SEXP LGBM_DatasetCreateFromMat_R(SEXP data,
   SEXP reference) {
   R_API_BEGIN();
   SEXP ret = Rf_protect(R_MakeExternalPtr(nullptr, R_NilValue, R_NilValue));
-  int32_t nrow = static_cast<int32_t>(Rf_asInteger(num_row));
+  int64_t nrow = static_cast<int64_t>(Rf_asInteger(num_row));
   int32_t ncol = static_cast<int32_t>(Rf_asInteger(num_col));
   double* p_mat = REAL(data);
   const char* parameters_ptr = CHAR(Rf_protect(Rf_asChar(parameters)));
@@ -374,8 +374,8 @@ SEXP LGBM_DatasetGetSubset_R(SEXP handle,
   R_API_BEGIN();
   _AssertDatasetHandleNotNull(handle);
   SEXP ret = Rf_protect(R_MakeExternalPtr(nullptr, R_NilValue, R_NilValue));
-  int32_t len = static_cast<int32_t>(Rf_asInteger(len_used_row_indices));
-  std::unique_ptr<int32_t[]> idxvec(new int32_t[len]);
+  int64_t len = static_cast<int64_t>(Rf_asInteger(len_used_row_indices));
+  std::vector<int32_t> idxvec(len);
   // convert from one-based to zero-based index
   const int *used_row_indices_ = INTEGER(used_row_indices);
 #ifndef _MSC_VER
@@ -489,7 +489,7 @@ SEXP LGBM_DatasetSetField_R(SEXP handle,
   SEXP num_element) {
   R_API_BEGIN();
   _AssertDatasetHandleNotNull(handle);
-  int len = Rf_asInteger(num_element);
+  int64_t len = Rf_asInteger(num_element);
   const char* name = CHAR(Rf_protect(Rf_asChar(field_name)));
   if (!strcmp("group", name) || !strcmp("query", name)) {
     CHECK_CALL(LGBM_DatasetSetField(R_ExternalPtrAddr(handle), name, INTEGER(field_data), len, C_API_DTYPE_INT32));
@@ -511,7 +511,7 @@ SEXP LGBM_DatasetGetField_R(SEXP handle,
   R_API_BEGIN();
   _AssertDatasetHandleNotNull(handle);
   const char* name = CHAR(Rf_protect(Rf_asChar(field_name)));
-  int out_len = 0;
+  int64_t out_len = 0;
   int out_type = 0;
   const void* res;
   CHECK_CALL(LGBM_DatasetGetField(R_ExternalPtrAddr(handle), name, &out_len, &res, &out_type));
@@ -522,7 +522,7 @@ SEXP LGBM_DatasetGetField_R(SEXP handle,
 #ifndef _MSC_VER
 #pragma omp simd
 #endif
-    for (int i = 0; i < out_len - 1; ++i) {
+    for (int64_t i = 0; i < out_len - 1; ++i) {
       field_data_[i] = p_data[i + 1] - p_data[i];
     }
   } else if (!strcmp("init_score", name)) {
@@ -543,7 +543,7 @@ SEXP LGBM_DatasetGetFieldSize_R(SEXP handle,
   R_API_BEGIN();
   _AssertDatasetHandleNotNull(handle);
   const char* name = CHAR(Rf_protect(Rf_asChar(field_name)));
-  int out_len = 0;
+  int64_t out_len = 0;
   int out_type = 0;
   const void* res;
   CHECK_CALL(LGBM_DatasetGetField(R_ExternalPtrAddr(handle), name, &out_len, &res, &out_type));
@@ -570,7 +570,7 @@ SEXP LGBM_DatasetUpdateParamChecking_R(SEXP old_params,
 SEXP LGBM_DatasetGetNumData_R(SEXP handle, SEXP out) {
   R_API_BEGIN();
   _AssertDatasetHandleNotNull(handle);
-  int nrow;
+  int64_t nrow;
   CHECK_CALL(LGBM_DatasetGetNumData(R_ExternalPtrAddr(handle), &nrow));
   INTEGER(out)[0] = nrow;
   return R_NilValue;
@@ -1116,7 +1116,7 @@ SEXP LGBM_BoosterPredictForMat_R(SEXP handle,
   R_API_BEGIN();
   _AssertBoosterHandleNotNull(handle);
   int pred_type = GetPredictType(is_rawscore, is_leafidx, is_predcontrib);
-  int32_t nrow = static_cast<int32_t>(Rf_asInteger(num_row));
+  int64_t nrow = static_cast<int64_t>(Rf_asInteger(num_row));
   int32_t ncol = static_cast<int32_t>(Rf_asInteger(num_col));
   const double* p_mat = REAL(data);
   double* ptr_ret = REAL(out_result);

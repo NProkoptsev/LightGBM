@@ -35,7 +35,7 @@ def load_from_file(filename, reference):
     handle = ctypes.c_void_p()
     LIB.LGBM_DatasetCreateFromFile(c_str(str(filename)), c_str("max_bin=15"), ref, ctypes.byref(handle))
     print(LIB.LGBM_GetLastError())
-    num_data = ctypes.c_int(0)
+    num_data = ctypes.c_int64(0)
     LIB.LGBM_DatasetGetNumData(handle, ctypes.byref(num_data))
     num_feature = ctypes.c_int(0)
     LIB.LGBM_DatasetGetNumFeature(handle, ctypes.byref(num_feature))
@@ -56,10 +56,19 @@ def load_from_csr(filename, reference):
     if reference is not None:
         ref = reference
 
+    if csr.indptr.dtype == np.int32:
+        indices_t = csr.indices.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+        indptr_t = csr.indptr.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+        indptr_type = ctypes.c_int(dtype_int32)
+    elif csr.indptr.dtype == np.int64:
+        indices_t = csr.indices.ctypes.data_as(ctypes.POINTER(ctypes.c_int64))
+        indptr_t = csr.indptr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64))
+        indptr_type = ctypes.c_int(dtype_int64)
+
     LIB.LGBM_DatasetCreateFromCSR(
-        csr.indptr.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
-        ctypes.c_int(dtype_int32),
-        csr.indices.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+        indptr_t,
+        indptr_type,
+        indices_t,
         csr.data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         ctypes.c_int(dtype_float64),
         ctypes.c_int64(len(csr.indptr)),
@@ -69,7 +78,7 @@ def load_from_csr(filename, reference):
         ref,
         ctypes.byref(handle),
     )
-    num_data = ctypes.c_int(0)
+    num_data = ctypes.c_int64(0)
     LIB.LGBM_DatasetGetNumData(handle, ctypes.byref(num_data))
     num_feature = ctypes.c_int(0)
     LIB.LGBM_DatasetGetNumFeature(handle, ctypes.byref(num_feature))
@@ -77,7 +86,7 @@ def load_from_csr(filename, reference):
         handle,
         c_str("label"),
         label.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-        ctypes.c_int(len(label)),
+        ctypes.c_int64(len(label)),
         ctypes.c_int(dtype_float32),
     )
     print(f"#data: {num_data.value} #feature: {num_feature.value}")
@@ -93,10 +102,19 @@ def load_from_csc(filename, reference):
     if reference is not None:
         ref = reference
 
+    if csc.indptr.dtype == np.int32:
+        indices_t = csc.indices.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+        indptr_t = csc.indptr.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+        indptr_type = ctypes.c_int(dtype_int32)
+    elif csc.indptr.dtype == np.int64:
+        indices_t = csc.indices.ctypes.data_as(ctypes.POINTER(ctypes.c_int64))
+        indptr_t = csc.indptr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64))
+        indptr_type = ctypes.c_int(dtype_int64)
+
     LIB.LGBM_DatasetCreateFromCSC(
-        csc.indptr.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
-        ctypes.c_int(dtype_int32),
-        csc.indices.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+        indptr_t,
+        indptr_type,
+        indices_t,
         csc.data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         ctypes.c_int(dtype_float64),
         ctypes.c_int64(len(csc.indptr)),
@@ -106,7 +124,7 @@ def load_from_csc(filename, reference):
         ref,
         ctypes.byref(handle),
     )
-    num_data = ctypes.c_int(0)
+    num_data = ctypes.c_int64(0)
     LIB.LGBM_DatasetGetNumData(handle, ctypes.byref(num_data))
     num_feature = ctypes.c_int(0)
     LIB.LGBM_DatasetGetNumFeature(handle, ctypes.byref(num_feature))
@@ -114,7 +132,7 @@ def load_from_csc(filename, reference):
         handle,
         c_str("label"),
         label.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-        ctypes.c_int(len(label)),
+        ctypes.c_int64(len(label)),
         ctypes.c_int(dtype_float32),
     )
     print(f"#data: {num_data.value} #feature: {num_feature.value}")
@@ -134,14 +152,14 @@ def load_from_mat(filename, reference):
     LIB.LGBM_DatasetCreateFromMat(
         data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         ctypes.c_int(dtype_float64),
-        ctypes.c_int32(mat.shape[0]),
+        ctypes.c_int64(mat.shape[0]),
         ctypes.c_int32(mat.shape[1]),
         ctypes.c_int(1),
         c_str("max_bin=15"),
         ref,
         ctypes.byref(handle),
     )
-    num_data = ctypes.c_int(0)
+    num_data = ctypes.c_int64(0)
     LIB.LGBM_DatasetGetNumData(handle, ctypes.byref(num_data))
     num_feature = ctypes.c_int(0)
     LIB.LGBM_DatasetGetNumFeature(handle, ctypes.byref(num_feature))
@@ -210,7 +228,7 @@ def test_booster(tmp_path):
         booster2,
         data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         ctypes.c_int(dtype_float64),
-        ctypes.c_int32(mat.shape[0]),
+        ctypes.c_int64(mat.shape[0]),
         ctypes.c_int32(mat.shape[1]),
         ctypes.c_int(1),
         ctypes.c_int(1),

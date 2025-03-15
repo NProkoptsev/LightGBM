@@ -541,11 +541,11 @@ def test_dataset_construction_overwrites_user_provided_metadata_fields():
     # constructed, get_* methods should return numpy arrays, even when the provided
     # input was a list of floats or ints
     dtrain.construct()
-    expected_group = np.array([1, 1], dtype=np.int32)
+    expected_group = np.array([1, 1], dtype=np.int64)
     np_assert_array_equal(dtrain.group, expected_group, strict=True)
     np_assert_array_equal(dtrain.get_group(), expected_group, strict=True)
     # get_field("group") returns a numpy array with boundaries, instead of size
-    np_assert_array_equal(dtrain.get_field("group"), np.array([0, 1, 2], dtype=np.int32), strict=True)
+    np_assert_array_equal(dtrain.get_field("group"), np.array([0, 1, 2], dtype=np.int64), strict=True)
 
     expected_init_score = np.array(
         [0.312, 0.708],
@@ -564,7 +564,7 @@ def test_dataset_construction_overwrites_user_provided_metadata_fields():
         np_assert_array_equal(dtrain.position, expected_position, strict=True)
         np_assert_array_equal(dtrain.get_position(), expected_position, strict=True)
         # NOTE: "position" is converted to int32 on the C++ side
-        np_assert_array_equal(dtrain.get_field("position"), np.array([0.0, 1.0], dtype=np.int32), strict=True)
+        np_assert_array_equal(dtrain.get_field("position"), np.array([0.0, 1.0], dtype=np.int64), strict=True)
 
     expected_weight = np.array([0.5, 1.5], dtype=np.float32)
     np_assert_array_equal(dtrain.weight, expected_weight, strict=True)

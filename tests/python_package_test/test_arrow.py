@@ -300,7 +300,7 @@ def test_dataset_construct_groups(array_type, group_data, arrow_type):
     dataset = lgb.Dataset(data, group=groups, params=dummy_dataset_params())
     dataset.construct()
 
-    expected = np.array([0, 2, 5], dtype=np.int32)
+    expected = np.array([0, 2, 5], dtype=np.int64)
     np_assert_array_equal(expected, dataset.get_field("group"), strict=True)
 
 

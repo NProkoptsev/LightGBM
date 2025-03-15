@@ -25,48 +25,48 @@ class TestUtils {
   /*!
    * Creates a dense Dataset of random values.
    */
-  static void CreateRandomDenseData(int32_t nrows,
+  static void CreateRandomDenseData(int64_t nrows,
     int32_t ncols,
     int32_t nclasses,
     std::vector<double>* features,
     std::vector<float>* labels,
     std::vector<float>* weights,
     std::vector<double>* init_scores,
-    std::vector<int32_t>* groups,
-    std::vector<int32_t>* positions);
+    std::vector<int64_t>* groups,
+    std::vector<int64_t>* positions);
 
   /*!
    * Creates a CSR sparse Dataset of random values.
    */
-  static void CreateRandomSparseData(int32_t nrows,
+  static void CreateRandomSparseData(int64_t nrows,
     int32_t ncols,
     int32_t nclasses,
     float sparse_percent,
     std::vector<int32_t>* indptr,
-    std::vector<int32_t>* indices,
+    std::vector<int64_t>* indices,
     std::vector<double>* values,
     std::vector<float>* labels,
     std::vector<float>* weights,
     std::vector<double>* init_scores,
-    std::vector<int32_t>* groups,
-    std::vector<int32_t>* positions);
+    std::vector<int64_t>* groups,
+    std::vector<int64_t>* positions);
 
   /*!
    * Creates a batch of Metadata of random values.
    */
-  static void CreateRandomMetadata(int32_t nrows,
+  static void CreateRandomMetadata(int64_t nrows,
     int32_t nclasses,
     std::vector<float>* labels,
     std::vector<float>* weights,
     std::vector<double>* init_scores,
-    std::vector<int32_t>* groups,
-    std::vector<int32_t>* positions);
+    std::vector<int64_t>* groups,
+    std::vector<int64_t>* positions);
 
   /*!
    * Pushes nrows of data to a Dataset in batches of batch_count.
    */
   static void StreamDenseDataset(DatasetHandle dataset_handle,
-    int32_t nrows,
+    int64_t nrows,
     int32_t ncols,
     int32_t nclasses,
     int32_t batch_count,
@@ -74,24 +74,24 @@ class TestUtils {
     const std::vector<float>* labels,
     const std::vector<float>* weights,
     const std::vector<double>* init_scores,
-    const std::vector<int32_t>* groups,
-    const std::vector<int32_t>* positions);
+    const std::vector<int64_t>* groups,
+    const std::vector<int64_t>* positions);
 
   /*!
    * Pushes nrows of data to a Dataset in batches of batch_count.
    */
   static void StreamSparseDataset(DatasetHandle dataset_handle,
-    int32_t nrows,
+    int64_t nrows,
     int32_t nclasses,
     int32_t batch_count,
     const std::vector<int32_t>* indptr,
-    const std::vector<int32_t>* indices,
+    const std::vector<int64_t>* indices,
     const std::vector<double>* values,
     const std::vector<float>* labels,
     const std::vector<float>* weights,
     const std::vector<double>* init_scores,
-    const std::vector<int32_t>* groups,
-    const std::vector<int32_t>* positions);
+    const std::vector<int64_t>* groups,
+    const std::vector<int64_t>* positions);
 
   /*!
    * Validates metadata against reference vectors.
@@ -100,30 +100,30 @@ class TestUtils {
     const std::vector<float>* labels,
     const std::vector<float>* weights,
     const std::vector<double>* init_scores,
-    const std::vector<int32_t>* groups,
-    const std::vector<int32_t>* positions);
+    const std::vector<int64_t>* groups,
+    const std::vector<int64_t>* positions);
 
   static const double* CreateInitScoreBatch(std::vector<double>* init_score_batch,
-    int32_t index,
-    int32_t nrows,
+    int64_t index,
+    int64_t nrows,
     int32_t nclasses,
     int32_t batch_count,
     const std::vector<double>* original_init_scores);
 
  private:
   static void PushSparseBatch(DatasetHandle dataset_handle,
-    int32_t nrows,
+    int64_t nrows,
     int32_t nclasses,
     int32_t batch_count,
     const std::vector<int32_t>* indptr,
     const int32_t* indptr_ptr,
-    const int32_t* indices_ptr,
+    const int64_t* indices_ptr,
     const double* values_ptr,
     const float* labels_ptr,
     const float* weights_ptr,
     const std::vector<double>* init_scores,
-    const int32_t* groups_ptr,
-    const int32_t* positions_ptr,
+    const int64_t* groups_ptr,
+    const int64_t* positions_ptr,
     int32_t thread_count,
     int32_t thread_id);
 };

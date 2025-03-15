@@ -630,7 +630,7 @@ void Metadata::SetPosition(const ArrowChunkedArray& array) {
   SetPositionsFromIterator(array.begin<data_size_t>(), array.end<data_size_t>());
 }
 
-void Metadata::InsertQueries(const data_size_t* queries, data_size_t start_index, data_size_t len) {
+void Metadata::InsertQueries(const int64_t* queries, data_size_t start_index, data_size_t len) {
   if (!queries) {
     Log::Fatal("Passed null queries");
   }
@@ -641,13 +641,13 @@ void Metadata::InsertQueries(const data_size_t* queries, data_size_t start_index
     Log::Fatal("Inserted query data is too large for dataset");
   }
 
-  memcpy(queries_.data() + start_index, queries, sizeof(data_size_t) * len);
+  memcpy(queries_.data() + start_index, queries, sizeof(int64_t) * len);
 
   query_load_from_file_ = false;
   // CUDA is handled after all insertions are complete
 }
 
-void Metadata::InsertPositions(const data_size_t* positions, data_size_t start_index, data_size_t len) {
+void Metadata::InsertPositions(const int64_t* positions, data_size_t start_index, data_size_t len) {
   if (!positions) {
     Log::Fatal("Passed null positions");
   }
@@ -658,7 +658,7 @@ void Metadata::InsertPositions(const data_size_t* positions, data_size_t start_i
     Log::Fatal("Inserted position data is too large for dataset");
   }
 
-  memcpy(positions_.data() + start_index, positions, sizeof(data_size_t) * len);
+  memcpy(positions_.data() + start_index, positions, sizeof(int64_t) * len);
 
   position_load_from_file_ = false;
   // CUDA is handled after all insertions are complete
@@ -795,8 +795,8 @@ void Metadata::InsertAt(data_size_t start_index,
   const float* labels,
   const float* weights,
   const double* init_scores,
-  const int32_t* queries,
-  const int32_t* positions) {
+  const int64_t* queries,
+  const int64_t* positions) {
   if (num_data_ < count + start_index) {
     Log::Fatal("Length of metadata is too long to append #data");
   }
